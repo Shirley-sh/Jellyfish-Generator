@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SH_JellyfishGuts
+  m_Shader: {fileID: 4800000, guid: 41f2af3e3c03b4a9c84a2ab78797b893, type: 3}
+  m_ShaderKeywords: _FOWARD_ON
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _ASEOutlineWidth: 0
+    - _DeformAmount: 0.05
+    - _Float0: 5
+    - _Foward: 1
+    - _PatternFactor: -9.62
+    - _Speed: 3
+    - _SpreadAmount: 1
+    - _VertexFreq: 3
+    - _VertexFreqOffse: 5
+    - _VertexFreqOffset: -0.49
+    - __dirty: 0
+    m_Colors:
+    - _ASEOutlineColor: {r: 0, g: 0, b: 0, a: 0}
+    - _MainColor: {r: 0.35635456, g: 0.48314396, b: 0.5283019, a: 0}
+    - _PatternColor: {r: 1, g: 1, b: 1, a: 1}
