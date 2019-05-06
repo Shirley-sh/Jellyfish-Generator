@@ -5,43 +5,77 @@ using NaughtyAttributes;
 using UnityEngine.Experimental.UIElements;
 
 public class MeshGenerator : MonoBehaviour {
-    public GameObject testGO;
+    [Header("Shape Body")]
     [Range(0,5)]public float rad;
     [Range(1,20)]public int subHeight;
     [Range(2,30)]public int numOfPatels;
     [Range(2,20)]public int axisPerPatel = 3;
     [Range(0f,1f)]public float cutAmount = 0.93f;
     [Range(0f,1f)]public float closeAmount = 0.2f;
+    
+    [Header("Shape Tentacle")]
     [Range(0f,20f)]public float tentacleLength = 0.3f;
     [Range(0f,1f)]public float tentacleWidth = 0.1f;
-    [Range(0f,20f)]public int tentacleSubdivision = 10;
+    [Range(0f,40f)]public int tentacleSubdivision = 10;
     [Range(0f, 1f)] public float tentacleOffset = 0;
-    public Vector3 offset;
+
+    [Header("Material")] 
+    public float patternFactor = -3.7f;
+
+
+
+    private bool isInitialized;
     private MeshFilter meshFilter;
     private Mesh mesh;
+    private Material material;
 
     private int subAxis;
+    private Vector3 lastPosition;
+    private Vector3 positionOffset;
     
     private List<Vector3> vertices;
     private List<int> triangles;
     private List<Vector2> uvs;
     private List<Vector3> colors;
-    
-    
+
+    public void SetParameter( int _numOfPatels, float _cutAmount, float _closeAmount
+        , float _tentacleLength, float _tentacleWidth, float _tentacleOffset) {
+        rad = 1;
+        subHeight = 10;
+        numOfPatels = _numOfPatels;
+        axisPerPatel = 5;
+        cutAmount = _cutAmount;
+        closeAmount = _closeAmount;
+        tentacleLength = _tentacleLength;
+        tentacleWidth = _tentacleWidth;
+        tentacleSubdivision = (int)_tentacleLength*10;
+        tentacleOffset = _tentacleOffset;
+        patternFactor = Random.Range(-10f,10f);
+        Debug.Log("Set Para");
+        isInitialized = true;
+    }
+
     [Button()]
-    void Start() {
-        subAxis= numOfPatels * axisPerPatel;
+    public void Generate() {
+        Debug.Log("Generate");
         meshFilter = GetComponent<MeshFilter>();
+        material = GetComponent<Renderer>().material;
+        
+        material.SetFloat("_PatternFactor", patternFactor);
+        material.SetFloat("_TentacleLength", tentacleLength);
+        
         vertices = new List<Vector3>();
         triangles = new List<int>();
         uvs = new List<Vector2>();
         colors = new List<Vector3>();
         
+        subAxis= numOfPatels * axisPerPatel;
+        
         //origin
-        vertices.Add(transform.position);
+        vertices.Add(Vector3.zero);
         uvs.Add(new Vector2(0.5f,0.5f));
         //head
-        for (int heightIndex = 0; heightIndex < subHeight; heightIndex++) {
+        for (int heightIndex = 1; heightIndex < subHeight; heightIndex++) {
             for (int axisIndex = 0; axisIndex < subAxis; axisIndex++) {
                 Vector3 pos = GetPosBySubdivision(axisIndex, heightIndex);
                 vertices.Add(pos);
@@ -49,7 +83,7 @@ public class MeshGenerator : MonoBehaviour {
                 uvs.Add(new Vector2(pos.x/rad*0.5f+0.5f,pos.z/rad*0.5f+0.5f));
             }
         }
-        for (int heightIndex = 0; heightIndex < subHeight; heightIndex++) {
+        for (int heightIndex = 0; heightIndex < subHeight-1; heightIndex++) {
             for (int axisIndex = 0; axisIndex < subAxis; axisIndex++) {
                 if (heightIndex == 0) {
                     AddToTriangle(0,axisIndex+1,axisIndex == subAxis-1? 1: axisIndex+1+1);
@@ -67,7 +101,7 @@ public class MeshGenerator : MonoBehaviour {
         }
         //tentacles
         float tentacleSegmentLength = tentacleLength / tentacleSubdivision;
-        rad *= 1 - tentacleOffset;
+        float tentacleRad = rad *( 1 - tentacleOffset);
         for (int axisIndex = 0; axisIndex < subAxis; axisIndex++) {
             for (int i = 0; i < tentacleSubdivision; i++) {
                 Vector3 l1, l2, r1, r2;
@@ -88,26 +122,24 @@ public class MeshGenerator : MonoBehaviour {
                 }
                 
                 vertices.Add(l1);
-                uvs.Add(new Vector2(l1.x / rad * 0.5f + 0.5f, l1.z / rad * 0.5f + 0.5f));
+                uvs.Add(new Vector2(l1.x / tentacleRad * 0.5f + 0.5f, l1.z / tentacleRad * 0.5f + 0.5f));
                 i0 = vertices.Count - 1;
                 vertices.Add(r1);
-                uvs.Add(new Vector2(r1.x / rad * 0.5f + 0.5f, r1.z / rad * 0.5f + 0.5f));
+                uvs.Add(new Vector2(r1.x / tentacleRad * 0.5f + 0.5f, r1.z / tentacleRad * 0.5f + 0.5f));
                 i1 = vertices.Count - 1;
 
 
                 r2 = GetTentaclePosBySubdivision(axisIndex-tentacleWidth, subHeight);
                 r2.y -= i * tentacleSegmentLength;
                 vertices.Add(r2);
-                uvs.Add(new Vector2(r2.x/rad*0.5f+0.5f,r2.z/rad*0.5f+0.5f));
+                uvs.Add(new Vector2(r2.x/tentacleRad*0.5f+0.5f,r2.z/tentacleRad*0.5f+0.5f));
                 i2 = vertices.Count - 1;
                 
                 l2 = GetTentaclePosBySubdivision(axisIndex+tentacleWidth, subHeight);
                 l2.y -= i * tentacleSegmentLength;
                 vertices.Add(l2);
-                uvs.Add(new Vector2(l2.x/rad*0.5f+0.5f,l2.z/rad*0.5f+0.5f));
+                uvs.Add(new Vector2(l2.x/tentacleRad*0.5f+0.5f,l2.z/tentacleRad*0.5f+0.5f));
                 i3 = vertices.Count - 1;
-
-
                 AddToTriangle(i0, i1, i2);
                 AddToTriangle(i0, i2, i3);
             }
@@ -116,12 +148,8 @@ public class MeshGenerator : MonoBehaviour {
 
         
         meshFilter.sharedMesh = CreateMesh();
+        isInitialized = true;
 
-//        for (int i = 0; i < vertices.Count; i++) {
-//            Vector3 vertex = vertices[i];
-//            GameObject go = Instantiate(testGO, vertex, Quaternion.identity);
-//            go.name = i.ToString();
-//        }
 
     }
 
@@ -164,8 +192,9 @@ public class MeshGenerator : MonoBehaviour {
     }
     
     public Mesh CreateMesh(){
+        if(mesh!=null)mesh.Clear();
         mesh = new Mesh();
-
+        
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
 
@@ -179,6 +208,18 @@ public class MeshGenerator : MonoBehaviour {
         return mesh;
     }
 
+    
+    // Update is called once per frame
+    void Update() {
+        if (isInitialized) {
+            positionOffset = lastPosition - transform.position;
+            material.SetVector("_DampOffset", positionOffset);
+            lastPosition = Vector3.Lerp(lastPosition, transform.position, Time.deltaTime * 0.3f);
+        } else {
+            Generate();
+        }
+    }
+    
     public void UpdateMesh() {
 
         mesh.vertices = vertices.ToArray();
@@ -190,15 +231,5 @@ public class MeshGenerator : MonoBehaviour {
 
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
-    }
-    
-    // Update is called once per frame
-    void Update(){
-        
-//        for (int i = 0; i < vertices.Count; i++) {
-//            vertices[i] += Mathf.Abs(meshFilter.sharedMesh.vertices[i].y) * offset;
-//        }
-//        
-//        UpdateMesh();
     }
 }
